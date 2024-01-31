@@ -1,10 +1,31 @@
 html,
 body {
-  font-family: "Roboto", sans-serif;
+    background-color: #f5f8fa;
+    font-family: "Roboto", sans-serif;
 }
 
 .container {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.wrapper {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 7px;
+}
+
+.wrapper-table {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.wrapper-select {
+    width: 100%;
 }
