@@ -2,8 +2,8 @@ import * as React from "react";
 const NotSolvedIcon = (props) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        width={17}
-        height={17}
+        width={16}
+        height={16}
         viewBox="0 0 24 24"
         fill="none"
         stroke="#EB5B5C"
