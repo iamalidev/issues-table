@@ -1,14 +1,10 @@
 import { Pagination } from "antd";
 import { useSearchParams } from "react-router-dom";
 
-const PaginationCustom = ({ limit, page, total  }) => {
+const PaginationCustom = ({ limit, page, total }) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    // const selectedPath = Object.fromEntries([...searchParams]);
 
     const handleChange = (page, pageSize) => {
-
-
-        console.log("hiii");
         if (page != null) {
             searchParams.set("page", page.toString());
             searchParams.set("limit", pageSize.toString());
@@ -24,7 +20,7 @@ const PaginationCustom = ({ limit, page, total  }) => {
         <div className="pagination-wrap">
             <Pagination
                 pageSizeOptions={["10", "20", "50", "100"]}
-                showSizeChanger
+                // showSizeChanger
                 onChange={(page, pageSize) => handleChange(page, pageSize)}
                 total={total}
                 current={page}
