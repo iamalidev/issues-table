@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Col, Row, Select, Table, Tag, Typography } from "antd";
-import PaginationCustom from "../../components/pagination";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import Search from "antd/es/input/Search";
+import { useSearchParams } from "react-router-dom";
+import { Input, Select, Table, Tag } from "antd";
 import Title from "antd/es/typography/Title";
+import PaginationCustom from "../../components/pagination";
 import LikeIcon from "../../assets/icons/like";
 import SolvedIcon from "../../assets/icons/solved";
 import NotSolvedIcon from "../../assets/icons/notSolved";
@@ -18,34 +17,78 @@ const difficultyColors = {
     extremal: "purple",
 };
 
-const onSearch = (value, _e, info) => console.log(info?.source, value);
-
 const Home = () => {
-    const { search } = useLocation();
-
-    const { page } = useParams();
-
     const [searchParams, setSearchParams] = useSearchParams();
+    const [data, setData] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(true);
 
-    console.log(searchParams.get("page"));
+    async function getData(page) {
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API}?page=${
+                    searchParams.get("page") || 1
+                }&page_size=${
+                    searchParams.get("page_size") || 10
+                }&hasChecker=${searchParams.get(
+                    "hasChecker"
+                )}&hasSolution=${searchParams.get("hasSolution")}`
+            );
+            const json = await response.json();
+            setData(json);
+            setLoading(false);
+            setTotalPages(json.total);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    async function titleChange(value) {
+        const response = await fetch(
+            `${import.meta.env.VITE_API}?title=${value}`
+        );
+        const json = await response.json();
+        setData(json);
+    }
+
+    function handleChange(hasChecker, queryName) {
+        if (hasChecker !== null) {
+            searchParams.set(queryName, hasChecker);
+            setSearchParams(searchParams);
+        } else {
+            searchParams.delete(queryName);
+            setSearchParams(searchParams);
+        }
+    }
+
+    function clear(keyword) {
+        searchParams.delete(keyword);
+        setSearchParams(searchParams);
+    }
 
     const columns = [
         {
             title: "ID",
             dataIndex: "id",
             key: "id",
-            sorter: (a, b) => a.id - b.id,
+            sorter: (a, b) => {
+                return a.id - b.id;
+            },
         },
         {
             title: "Title",
             dataIndex: "title",
             key: "title",
-            sorter: (a, b) => a.title - b.title,
+            sorter: (a, b) => a.title.localeCompare(b.title),
             render: (title) => (
                 <div>
                     <Title level={5}>{title}</Title>
                 </div>
             ),
+            onFilter: (value, record) =>
+                String(record.title)
+                    .toLowerCase()
+                    .includes(value.toLowerCase()),
         },
         {
             title: "Tags",
@@ -65,7 +108,6 @@ const Home = () => {
             title: "Difficulty",
             dataIndex: "difficultyTitle",
             key: "difficultyTitle",
-            sorter: (a, b) => a.difficultyTitle - b.difficultyTitle,
             render: (difficultyTitle) => (
                 <Tag color={difficultyColors[difficultyTitle.toLowerCase()]}>
                     {difficultyTitle}
@@ -74,7 +116,6 @@ const Home = () => {
         },
         {
             title: "Rating",
-            sorter: (a, b) => a.likesCount - b.likesCount,
             render: (rate) => (
                 <span className="rate">
                     <span>
@@ -89,7 +130,6 @@ const Home = () => {
         },
         {
             title: "Attempts",
-            sorter: (a, b) => a.solved - b.solved,
             render: (attempt) => (
                 <span className="rate">
                     <span style={{ color: "#39CC7A" }}>
@@ -104,87 +144,73 @@ const Home = () => {
         },
     ];
 
-    const [data, setData] = useState([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [loading, setLoading] = useState(true);
-
-    async function getData(page) {
-        try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API}?page=${searchParams.get("page")}`
-            );
-            const json = await response.json();
-            setData(json);
-            setLoading(false);
-            setTotalPages(json.total);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    }
-    console.log(data);
-
     useEffect(() => {
         getData(1);
     }, [searchParams]);
 
-    const currentPage = data.page ? Number(data.page) : 1;
+    const currentPage = data?.page ? Number(data.page) : 1;
 
     return (
         <div className="container">
             <div className="wrapper">
                 <div className="wrapper-items">
-                    <Row gutter={16}>
-                        <Col className="gutter-row" span={6}>
-                            <Typography.Title level={3} type="secondary">
-                                Filter()
-                            </Typography.Title>
-                        </Col>
-                        <Col className="gutter-row" span={6}>
-                            <Search
-                                className="wrapper-input"
-                                placeholder="Search by Title"
-                                onSearch={onSearch}
-                                allowClear
-                            />
-                        </Col>
-                        <Col className="gutter-row" span={6}>
-                            <Select
-                                className="wrapper-select"
-                                allowClear
-                                options={[
-                                    {
-                                        value: "lucy",
-                                        label: "Lucy",
-                                    },
-                                ]}
-                            />
-                        </Col>
-                        <Col className="gutter-row" span={6}>
-                            <Select
-                                className="wrapper-select"
-                                allowClear
-                                options={[
-                                    {
-                                        value: "lucy",
-                                        label: "Lucy",
-                                    },
-                                ]}
-                            />
-                        </Col>
-                    </Row>
+                    <Input.Search
+                        className="wrapper-input"
+                        placeholder="Search by Title"
+                        allowClear
+                        onSearch={(value) => titleChange(value)}
+                        onChange={(e) => titleChange(e.target.value)}
+                    />
+                    <Select
+                        placeholder="Select checker"
+                        className="wrapper-select"
+                        allowClear
+                        onClear={() => clear("hasChecker")}
+                        defaultValue={searchParams.get("hasChecker")}
+                        options={[
+                            {
+                                value: "true",
+                                label: "Yes",
+                            },
+                            {
+                                value: "false",
+                                label: "No",
+                            },
+                        ]}
+                        onChange={(value) => handleChange(value, "hasChecker")}
+                    />
+                    <Select
+                        placeholder="Select solution"
+                        className="wrapper-select"
+                        defaultValue={searchParams.get("hasSolution")}
+                        allowClear
+                        options={[
+                            {
+                                value: "true",
+                                label: "Yes",
+                            },
+                            {
+                                value: "false",
+                                label: "No",
+                            },
+                        ]}
+                        onChange={(value) => handleChange(value, "hasSolution")}
+                    />
                 </div>
                 <div className="wrapper-table">
                     <Table
                         columns={columns}
-                        dataSource={data.data}
+                        dataSource={data?.data}
                         loading={loading}
-                        // pagination={false}
+                        pagination={false}
                     />
+                </div>
+                <div className="wrapper-pagination">
                     <PaginationCustom
                         className="wrapper-pagination"
-                        limit={10}
+                        limit={searchParams.get("page_size") || 10}
                         page={currentPage}
-                        total={data.total}
+                        total={data?.total}
                     />
                 </div>
             </div>
